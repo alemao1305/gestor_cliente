@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Bem-vindo ao Sistema de Agendamento da Clínica</h1>
+<p>Use o menu acima para navegar entre os clientes e os agendamentos.</p>
+
+<div>
+    <a href="{{ url_for('clients') }}">Ver Lista de Clientes</a><br>
+    <a href="{{ url_for('appointments') }}">Ver Agendamentos</a><br>
+    <a href="{{ url_for('calendar') }}">Ver Calendar</a>
+</div>
+
+{% endblock %}

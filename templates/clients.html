@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Clientes</h2>
+
+<form method="POST">
+    {{ form.hidden_tag() }}
+    <div>
+        {{ form.name.label }} <br>
+        {{ form.name() }}
+    </div>
+    <br>
+    <div>
+        {{ form.contact.label }} <br>
+        {{ form.contact() }}
+    </div>
+    <br>
+    <div>
+        {{ form.submit() }}
+    </div>
+</form>
+
+<h3>Lista de Clientes</h3>
+<ul>
+    {% for client in clients %}
+    <li>
+        <strong>Nome:</strong> {{ client.name }} <br>
+        <strong>Contato:</strong> {{ client.contact }}
+    </li>
+    {% endfor %}
+</ul>
+
+{% endblock %}

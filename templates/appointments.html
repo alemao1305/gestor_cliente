@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Agendamentos</h2>
+
+<form method="POST">
+    {{ form.hidden_tag() }}
+    <div>
+        {{ form.client_id.label }} <br> 
+        {{ form.client_id() }}
+    </div>
+    <br>
+    <div>
+        {{ form.date.label }} <br> 
+        {{ form.date() }}
+    </div>
+    <br>
+    <div>
+        {{ form.service.label }} <br> 
+        {{ form.service() }}
+    </div>
+    <br>
+    <div>
+        {{ form.submit() }}
+    </div>
+</form>
+
+<h3>Próximos Agendamentos</h3>
+<ul>
+    {% for appointment in appointments %}
+    <li>
+        <strong>Data:</strong> {{ appointment.date }} <br>
+        <strong>Serviço:</strong> {{ appointment.service }} <br>
+        <strong>Cliente:</strong> {{ appointment.client.name }}
+    </li>
+    {% else %}
+    <li>Nenhum agendamento encontrado.</li>
+    {% endfor %}
+</ul>
+
+<!-- Calendário Nativo -->
+<div>
+    <a href="{{ url_for('calendar') }}">Ver calendário</a>
+</div>
+
+{% endblock %}
