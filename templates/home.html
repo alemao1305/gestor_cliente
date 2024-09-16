@@ -1,13 +1,16 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>Bem-vindo ao Sistema de Agendamento da Clínica</h1>
-<p>Use o menu acima para navegar entre os clientes e os agendamentos.</p>
+<body>
+    <div class="container mt-4">
+        <h2> <br> </h2>
+        <h1>Bem-vindo ao Sistema de Agendamento da Clínica</h1>
+        <p>Use o menu acima para navegar entre os clientes e os agendamentos.</p>
 
-<div>
-    <a href="{{ url_for('clients') }}">Ver Lista de Clientes</a><br>
-    <a href="{{ url_for('appointments') }}">Ver Agendamentos</a><br>
-    <a href="{{ url_for('calendar') }}">Ver Calendar</a>
-</div>
-
+        <div>
+            <a href="{{ url_for('clients') }}">Ver Lista de Clientes</a><br>
+            <a href="{{ url_for('appointments') }}">Ver Agendamentos</a><br>
+            <a href="{{ url_for('calendar') }}">Ver Calendar</a>
+        </div>
+<body>
 {% endblock %}
