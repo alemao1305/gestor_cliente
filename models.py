@@ -1,21 +1,39 @@
-'''from app import db'''
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
-class Client(db.Model):
-    '''__tablename__ = 'client'''
+# Tabela de usuários (para login)
+class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, nullable=False)
-    contact = db.Column(db.String, nullable=False)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password = db.Column(db.String(120), nullable=False)
+    role_id = db.Column(db.Integer, db.ForeignKey('role.id'), nullable=False)
 
-    '''def __repr__(self):
-        return f'<Client {self.name}>'''
+# Tabela de papéis (permissões)
+class Role(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), unique=True, nullable=False)
+    users = db.relationship('User', backref='role', lazy=True)
 
+# Tabela de funcionários
+class Employee(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    contact = db.Column(db.String(100), nullable=False)
+    role_id = db.Column(db.Integer, db.ForeignKey('role.id'), nullable=False)
+
+# Tabela de clientes
+class Client(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    contact = db.Column(db.String(100), nullable=False)
+
+# Tabela de agendamentos
 class Appointment(db.Model):
-    '''__tablename__ = 'appointment'''
     id = db.Column(db.Integer, primary_key=True)
     client_id = db.Column(db.Integer, db.ForeignKey('client.id'), nullable=False)
-    date = db.Column(db.DateTime, nullable=False)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
+    date = db.Column(db.String(100), nullable=False)
     service = db.Column(db.String(100), nullable=False)
-    client = db.relationship('Client', backref=db.backref('appointments', lazy=True))
+    client = db.relationship('Client', backref='appointments', lazy=True)
+    employee = db.relationship('Employee', backref='appointments', lazy=True)
