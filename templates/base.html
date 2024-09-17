@@ -18,6 +18,7 @@
             <a class="nav-link {% if request.endpoint == 'clients' %}active{% endif %}" href="{{ url_for('clients') }}">Clientes</a>
             <a class="nav-link {% if request.endpoint == 'appointments' %}active{% endif %}" href="{{ url_for('appointments') }}">Agendamentos</a>
             <a class="nav-link {% if request.endpoint == 'calendar' %}active{% endif %}" href="{{ url_for('calendar') }}">Calendar</a>
+            <a class="nav-link {% if request.endpoint == 'employees' %}active{% endif %}" href="{{ url_for('employees') }}">Cadastrar funcionarios</a>
         </nav>
     </header>
 

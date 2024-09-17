@@ -1,6 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, session, request, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from forms import ClientForm, AppointmentForm
+from werkzeug.security import generate_password_hash, check_password_hash
+from forms import ClientForm, AppointmentForm, LoginForm, EmployeeForm
 from datetime import datetime
 import os
 '''from models import Client, Appointment'''
@@ -35,6 +36,31 @@ class Appointment(db.Model):
     service = db.Column(db.String(100), nullable=False)
     client = db.relationship('Client', backref=db.backref('appointments', lazy=True))
 
+# Modelo User
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(100), unique=True, nullable=False)
+    password_hash = db.Column(db.String(100), nullable=False)
+    is_admin = db.Column(db.Boolean, default=False)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+class Employee(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(100), unique=True, nullable=False)
+    password_hash = db.Column(db.String(100), nullable=False)
+    is_admin = db.Column(db.Boolean, default=False)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
 # Cria as tabelas no banco de dados
 with app.app_context():
     db.create_all()
@@ -43,6 +69,54 @@ with app.app_context():
 @app.route('/')
 def home():
     return render_template('home.html', title='Sistema de Agendamento')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(username=form.username.data).first()
+        if user and user.check_password(form.password.data):
+            session['user_id'] = user.id
+            flash('Login bem-sucedido!', 'success')
+            return redirect(url_for('home'))
+        else:
+            flash('Usuário ou senha inválidos.', 'danger')
+    return render_template('login.html', form=form)
+
+'''@app.route('/home')
+def home():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    return render_template('home.html')'''
+
+@app.route('/logout')
+def logout():
+    session.pop('user_id', None)
+    flash('Você saiu com sucesso!', 'success')
+    return redirect(url_for('login'))
+
+# Rota de permissões
+@app.route('/employees', methods=['GET', 'POST'])
+def employees():
+    
+    if 'user_id' not in session or not User.query.get(session['user_id']).is_admin:
+        flash('Acesso não autorizado.', 'danger')
+        return redirect(url_for('login'))
+
+    form = EmployeeForm()
+    if form.validate_on_submit():
+        employee = Employee(username=form.username.data)
+        employee.set_password(form.password.data)
+        employee.is_admin = form.is_admin.data
+        db.session.add(employee)
+        db.session.commit()
+        flash('Funcionário adicionado com sucesso!', 'success')
+        return redirect(url_for('employees'))
+
+   
+
+    employees = Employee.query.all()
+    return render_template('employees.html', form=form, employees=employees)
 
 # Rota para os agendamentos
 @app.route('/appointments', methods=['GET', 'POST'])
