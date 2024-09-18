@@ -37,3 +37,8 @@ CREATE TABLE Appointment (
     FOREIGN KEY (client_id) REFERENCES Client(id),
     FOREIGN KEY (employee_id) REFERENCES employees(id)
 );
+
+-- Adicionando novas colunas à tabela Client
+ALTER TABLE Client ADD COLUMN email TEXT NOT NULL;
+ALTER TABLE Client ADD COLUMN address TEXT NOT NULL;
+ALTER TABLE Client ADD COLUMN house_number TEXT NOT NULL;

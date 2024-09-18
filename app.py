@@ -19,14 +19,17 @@ db = SQLAlchemy(app)
 from models import Client, Appointment
 
 # Cria as tabelas no banco de dados
-with app.app_context():
+'''with app.app_context():
     db.create_all()
-
+'''
 # Modelo Client
 class Client(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     contact = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(100), nullable=False)  # Novo campo de email
+    address = db.Column(db.String(200), nullable=False)  # Novo campo de endereço
+    house_number = db.Column(db.String(20), nullable=False)  # Novo campo de número da casa
 
 # Modelo Appointment
 class Appointment(db.Model):
@@ -83,6 +86,8 @@ def login():
             flash('Usuário ou senha inválidos.', 'danger')
     return render_template('login.html', form=form)
 
+    
+
 '''@app.route('/home')
 def home():
     if 'user_id' not in session:
@@ -98,25 +103,50 @@ def logout():
 # Rota de permissões
 @app.route('/employees', methods=['GET', 'POST'])
 def employees():
-    
-    if 'user_id' not in session or not User.query.get(session['user_id']).is_admin:
-        flash('Acesso não autorizado.', 'danger')
+    print("Sessão atual:", session)
+    if 'user_id' not in session:
+        flash('Por favor, faça login primeiro.', 'danger')
         return redirect(url_for('login'))
 
-    form = EmployeeForm()
-    if form.validate_on_submit():
-        employee = Employee(username=form.username.data)
-        employee.set_password(form.password.data)
-        employee.is_admin = form.is_admin.data
-        db.session.add(employee)
-        db.session.commit()
-        flash('Funcionário adicionado com sucesso!', 'success')
-        return redirect(url_for('employees'))
+    user = User.query.get(session['user_id'])
+    if not user:
+        flash('Usuário não encontrado.', 'danger')
+        return redirect(url_for('login'))
+    if not user.is_admin:
+        flash('Acesso não autorizado. Você precisa ser administrador.', 'danger')
+        return redirect(url_for('login'))
 
-   
+    print("Usuário logado:", user.username)
+    
+    form = EmployeeForm()
+
+    if form.validate_on_submit():
+            try:
+                employee = Employee(username=form.username.data)
+                employee.set_password(form.password.data)
+                employee.is_admin = form.is_admin.data
+                db.session.add(employee)
+                db.session.commit()
+                flash('Funcionário adicionado com sucesso!', 'success')
+            except Exception as e:
+                db.session.rollback()
+                print(f"Erro ao adicionar funcionário: {e}")
+                flash('Erro ao adicionar funcionário.', 'danger')
+    
+            return redirect(url_for('employees'))
 
     employees = Employee.query.all()
     return render_template('employees.html', form=form, employees=employees)
+
+@app.route('/create_admin')
+def create_admin():
+    admin = User(username='admin')
+    admin.set_password('admin123')
+    admin.is_admin = True
+    db.session.add(admin)
+    db.session.commit()
+    return 'Admin criado com sucesso!'
+
 
 # Rota para os agendamentos
 @app.route('/appointments', methods=['GET', 'POST'])
@@ -129,6 +159,12 @@ def appointments():
         date = form.date.data
         service = form.service.data
         
+        # Verifica se o client é válido
+        client = Client.query.get(client_id)
+        if not client:
+            flash('Cliente não encontrado.', 'danger')
+            return redirect(url_for('appointments'))
+
         # Cria e adiciona o agendamento ao banco de dados
         appointment = Appointment(client_id=client_id, date=date, service=service)
         db.session.add(appointment)
@@ -166,6 +202,21 @@ def appointments_json():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# Excluir agendamento
+@app.route('/delete_appointment/<int:appointment_id>', methods=['POST'])
+def delete_appointment(appointment_id):
+    appointment = Appointment.query.get_or_404(appointment_id)
+    try:
+        db.session.delete(appointment)
+        db.session.commit()
+        flash('Agendamento removido com sucesso!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erro ao remover agendamento: {str(e)}', 'danger')
+
+    return redirect(url_for('appointments'))
+
+
 # Rota para os clientes
 @app.route('/clients', methods=['GET', 'POST'])
 def clients():
@@ -176,8 +227,8 @@ def clients():
 
     if form.validate_on_submit():
         print("Formulário validado com sucesso")
-        new_client = Client(name=form.name.data, contact=form.contact.data)
-        print(f"Novo cliente: {new_client.name}, {new_client.contact}")
+        new_client = Client(name=form.name.data, contact=form.contact.data, email=form.email.data, address=form.address.data, house_number=form.house_number.data)
+        print(f"Novo cliente: {new_client.name}, {new_client.contact}, {new_client.email}, {new_client.address}, {new_client.house_number}")
         try:
             db.session.add(new_client)
             db.session.commit()
@@ -213,6 +264,46 @@ def delete_client(client_id):
 def calendar():
     appointments = Appointment.query.order_by(Appointment.date).all()
     return render_template('calendar.html', appointments=appointments)
+
+def format_date(date_str):
+    try:
+        # Ajuste conforme o formato de data do banco de dados
+        date = datetime.strptime(date_str, '%Y-%m-%d')  # Supondo que a data esteja no formato 'YYYY-MM-DD'
+        return date.isoformat()  # Converte para o formato ISO 8601
+    except ValueError:
+        return None
+
+@app.route('/get-events', methods=['GET'])
+def get_events():
+    start = request.args.get('start')
+    end = request.args.get('end')
+
+    if not start or not end:
+        return jsonify({'error': 'Datas start e end são necessárias'}), 400
+
+    try:
+        # Converter datas de string para datetime
+        start_date = datetime.fromisoformat(start)
+        end_date = datetime.fromisoformat(end)
+
+        # Filtrar os agendamentos no intervalo de datas
+        appointments = Appointment.query.filter(Appointment.date >= start_date, Appointment.date <= end_date).all()
+
+        data = [
+            {
+                'id': appointment.id,
+                'title': f'{appointment.client.name} - {appointment.service}',  # Título do evento
+                'start': format_date(appointment.date),  # Formatar data para o formato ISO
+                'allDay': True  # Define se o evento é o dia inteiro
+            }
+            for appointment in appointments
+        ]
+
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)

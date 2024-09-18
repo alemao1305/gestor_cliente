@@ -56,6 +56,9 @@
                 <strong>Data:</strong> {{ appointment.date }} <br>
                 <strong>Serviço:</strong> {{ appointment.service }} <br>
                 <strong>Cliente:</strong> {{ appointment.client.name }}
+                <form action="{{ url_for('delete_appointment', appointment_id=appointment.id) }}" method="post">
+                    <button type="submit" class="btn btn-danger btn-sm">Excluir</button>
+                </form>
             </li>
             {% else %}
             <li class="list-group-item">Nenhum agendamento encontrado.</li>
