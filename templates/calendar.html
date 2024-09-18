@@ -15,18 +15,27 @@
     <div id='calendar'></div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             var calendarEl = document.getElementById('calendar');
+
             var calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridMonth',
                 locale: 'pt-br',
-                events: '/get-events',  // Rota para buscar os eventos
-                editable: true,  // Permitir arrastar os eventos
-                selectable: true,
-                dateClick: function(info) {
-                    alert('Data: ' + info.dateStr);
-                }
+                initialView: 'dayGridMonth',
+                events: function(info, successCallback, failureCallback) {
+                    fetch('/get-events?start=' + info.startStr + '&end=' + info.endStr)
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log('Eventos recebidos:', data);  // Depuração
+                            successCallback(data);
+                        })
+                        .catch(error => {
+                            console.error('Erro ao buscar eventos:', error);  // Depuração
+                            failureCallback(error);
+                        });
+                },
+                eventColor: '#378006'
             });
+
             calendar.render();
         });
     </script>

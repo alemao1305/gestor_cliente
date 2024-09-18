@@ -28,6 +28,36 @@
                     {% endif %}
                 </div>
                 <div class="form-group">
+                    {{ form.email.label }} {{ form.email(class="form-control") }}
+                    {% if form.email.errors %}
+                        <ul class="text-danger">
+                            {% for error in form.email.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    {{ form.address.label }} {{ form.address(class="form-control") }}
+                    {% if form.address.errors %}
+                        <ul class="text-danger">
+                            {% for error in form.address.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    {{ form.house_number.label }} {{ form.house_number(class="form-control") }}
+                    {% if form.house_number.errors %}
+                        <ul class="text-danger">
+                            {% for error in form.house_number.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+                <div class="form-group">
                     {{ form.submit(class="btn btn-primary") }}
                 </div>
             </form>
@@ -37,8 +67,13 @@
             <ul>
                 {% for client in clients %}
                 <li>
-                    {{ client.name }} - {{ client.contact }}
-                    <form action="{{ url_for('delete_client', client_id=client.id) }}" method="POST" style="display:inline;">
+                    <strong>Nome:</strong> {{ client.name }} <br>
+                    <strong>Contato:</strong> {{ client.contact }} <br>
+                    <strong>E-mail:</strong> {{ client.email }} <br>
+                    <strong>Endereço:</strong> {{ client.address }} <br>
+                    <strong>Número da Casa:</strong> {{ client.house_number }} <br>
+                    <br>
+                    <form action="{{ url_for('delete_client', client_id=client.id) }}" method="POST" >
                         <button type="submit" class="btn btn-danger btn-sm">Excluir</button>
                     </form>
                 </li>

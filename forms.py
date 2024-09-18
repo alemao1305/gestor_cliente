@@ -1,15 +1,18 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, SelectField,  PasswordField, BooleanField
-from wtforms.validators import DataRequired
+from wtforms import StringField, SubmitField, IntegerField, SelectField,  PasswordField, BooleanField
+from wtforms.validators import DataRequired, Length, Email
 '''from models import Client  # Importação de modelos no início do arquivo'''
 
 class ClientForm(FlaskForm):
     name = StringField('Nome', validators=[DataRequired()])
     contact = StringField('Contato', validators=[DataRequired()])
+    email = StringField('E-mail', validators=[DataRequired(), Email()])
+    address = StringField('Endereço', validators=[DataRequired()])
+    house_number = StringField('Numero da Casa', validators=[DataRequired()])
     submit = SubmitField('Adicionar Cliente')
 
 class AppointmentForm(FlaskForm):
-    client_id = SelectField('Cliente', coerce=int, validators=[DataRequired()])
+    client_id = IntegerField('ID do Cliente', validators=[DataRequired()])
     date = StringField('Data', validators=[DataRequired()])
     service = StringField('Serviço', validators=[DataRequired()])
     submit = SubmitField('Agendar')
@@ -28,7 +31,7 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Entrar')
 
 class EmployeeForm(FlaskForm):
-    username = StringField('Nome de usuário', validators=[DataRequired()])
+    username = StringField('Nome de usuário', validators=[DataRequired(), Length(min=4, max=25)])
     password = PasswordField('Senha', validators=[DataRequired()])
     is_admin = BooleanField('Admin')
     submit = SubmitField('Adicionar Funcionário')
