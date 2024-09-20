@@ -1,3 +1,4 @@
+-- database: instance/clinic.db
 -- Criação da tabela de Usuários
 CREATE TABLE users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -42,3 +43,4 @@ CREATE TABLE Appointment (
 ALTER TABLE Client ADD COLUMN email TEXT NOT NULL;
 ALTER TABLE Client ADD COLUMN address TEXT NOT NULL;
 ALTER TABLE Client ADD COLUMN house_number TEXT NOT NULL;
+ALTER TABLE Cliet ADD COLUMN cpf TEXT UNIQUE;

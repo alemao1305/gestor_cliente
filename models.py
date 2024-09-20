@@ -24,17 +24,18 @@ class Employee(db.Model):
 
 # Tabela de clientes
 class Client(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    cpf = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     contact = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), nullable=False, unique=True)
     address = db.Column(db.String(200), nullable=False)
     house_number = db.Column(db.String(10), nullable=False)
+    
 
 # Tabela de agendamentos
 class Appointment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    client_id = db.Column(db.Integer, db.ForeignKey('client.id'), nullable=False)
+    client_id = db.Column(db.Integer, db.ForeignKey('client.cpf'), nullable=False)
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
     date = db.Column(db.String(100), nullable=False)
     service = db.Column(db.String(100), nullable=False)
