@@ -24,17 +24,18 @@ from models import Client, Appointment
 '''
 # Modelo Client
 class Client(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    cpf = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     contact = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), nullable=False)  # Novo campo de email
     address = db.Column(db.String(200), nullable=False)  # Novo campo de endereço
     house_number = db.Column(db.String(20), nullable=False)  # Novo campo de número da casa
+    
 
 # Modelo Appointment
 class Appointment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    client_id = db.Column(db.Integer, db.ForeignKey('client.id'), nullable=False)
+    client_id = db.Column(db.Integer, db.ForeignKey('client.cpf'), nullable=False)
     date = db.Column(db.String(100), nullable=False)
     service = db.Column(db.String(100), nullable=False)
     client = db.relationship('Client', backref=db.backref('appointments', lazy=True))
@@ -155,18 +156,18 @@ def appointments():
 
     if request.method == 'POST' and form.validate_on_submit():
         # Pega os dados do formulário e salva o novo agendamento
-        client_id = form.client_id.data
+        client_cpf = form.client_cpf.data
         date = form.date.data
         service = form.service.data
         
         # Verifica se o client é válido
-        client = Client.query.get(client_id)
+        client = Client.query.get(client_cpf)
         if not client:
             flash('Cliente não encontrado.', 'danger')
             return redirect(url_for('appointments'))
 
         # Cria e adiciona o agendamento ao banco de dados
-        appointment = Appointment(client_id=client_id, date=date, service=service)
+        appointment = Appointment(client_id=client_cpf, date=date, service=service)
         db.session.add(appointment)
         db.session.commit()
 
@@ -176,6 +177,18 @@ def appointments():
     appointments = Appointment.query.all()
 
     return render_template('appointments.html', form=form, appointments=appointments)
+
+@app.route('/check-client', methods=['POST'])
+def check_client():
+    client_name = request.json.get('client_name')
+
+    # Procurar cliente no banco de dados
+    client = Client.query.filter_by(name=client_name).first()
+
+    if client:
+        return jsonify({'exists': True, 'client_id': client.id}), 200
+    else:
+        return jsonify({'exists': False}), 200
 
 # Rota para json
 @app.route('/appointments/json', methods=['GET'])
@@ -227,8 +240,8 @@ def clients():
 
     if form.validate_on_submit():
         print("Formulário validado com sucesso")
-        new_client = Client(name=form.name.data, contact=form.contact.data, email=form.email.data, address=form.address.data, house_number=form.house_number.data)
-        print(f"Novo cliente: {new_client.name}, {new_client.contact}, {new_client.email}, {new_client.address}, {new_client.house_number}")
+        new_client = Client(name=form.name.data, contact=form.contact.data, email=form.email.data, address=form.address.data, house_number=form.house_number.data, cpf=form.cpf.data)
+        print(f"Novo cliente: {new_client.name}, {new_client.contact}, {new_client.email}, {new_client.address}, {new_client.house_number}, {new_client.cpf}")
         try:
             db.session.add(new_client)
             db.session.commit()

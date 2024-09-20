@@ -9,11 +9,11 @@
             {{ form.hidden_tag() }}
 
             <div class="form-group">
-                {{ form.client_id.label(class="form-label") }}
-                {{ form.client_id(class="form-control") }}
-                {% if form.client_id.errors %}
+                {{ form.client_cpf.label(class="form-label") }}
+                {{ form.client_cpf(class="form-control") }}
+                {% if form.client_cpf.errors %}
                     <ul class="text-danger">
-                        {% for error in form.client_id.errors %}
+                        {% for error in form.client_cpf.errors %}
                             <li>{{ error }}</li>
                         {% endfor %}
                     </ul>
