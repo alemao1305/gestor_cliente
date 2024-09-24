@@ -207,6 +207,7 @@ def appointments_json():
                 'id': appointment.id,
                 'client': appointment.client.name,
                 'date': appointment.date,
+                'time': appointment.time,
                 'service': appointment.service
             }
             for appointment in appointments

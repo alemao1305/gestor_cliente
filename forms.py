@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, IntegerField, SelectField,  PasswordField, BooleanField
-from wtforms.validators import DataRequired, Length, Email
+from wtforms import StringField, SubmitField, IntegerField, SelectField,  PasswordField, BooleanField, DateTimeField
+from wtforms.validators import DataRequired, Length, Email, D
 
 class ClientForm(FlaskForm):
     name = StringField('Nome', validators=[DataRequired()])
@@ -14,6 +14,7 @@ class ClientForm(FlaskForm):
 class AppointmentForm(FlaskForm):
     client_cpf = StringField('CPF do Cliente', validators=[DataRequired()])
     date = StringField('Data', validators=[DataRequired()])
+    time = DateTimeField('Time', validators=[DataRequired()])
     service = StringField('Serviço', validators=[DataRequired()])
     submit = SubmitField('Agendar')
 
