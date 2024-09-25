@@ -14,10 +14,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
         ],
+        dateClick: function(info) {
+            // Redireciona para a tela de tarefas com a data selecionada
+            var selectedDate = info.dateStr; // Obter a data clicada
+            window.location.href = '/tasks/' + selectedDate; // Redireciona
+        },
         eventClick: function (info) {
             alert('Evento: ' + info.event.title);
         }
     });
 
-    calendar.render();
+    calendar.render(); // Renderiza o calendário
 });

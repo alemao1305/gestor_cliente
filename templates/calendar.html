@@ -33,7 +33,11 @@
                             failureCallback(error);
                         });
                 },
-                eventColor: '#378006'
+                eventColor: '#378006',
+                dateClick: function(info) {
+                    // Redireciona para a tela de agendamentos para o dia selecionado
+                    window.location.href = '/tasks/' + info.dateStr; // Atualize esta URL conforme necessário
+                }
             });
 
             calendar.render();

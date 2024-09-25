@@ -4,6 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from forms import ClientForm, AppointmentForm, LoginForm, EmployeeForm
 from datetime import datetime
 import os
+import logging
 '''from models import Client, Appointment'''
 
 app = Flask(__name__)
@@ -37,6 +38,7 @@ class Appointment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     client_id = db.Column(db.Integer, db.ForeignKey('client.cpf'), nullable=False)
     date = db.Column(db.String(100), nullable=False)
+    time = db.Column(db.Time, nullable=False)
     service = db.Column(db.String(100), nullable=False)
     client = db.relationship('Client', backref=db.backref('appointments', lazy=True))
 
@@ -77,17 +79,40 @@ def home():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
+
+    # Verificar se o formulário foi enviado e é válido
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
-        if user and user.check_password(form.password.data):
-            session['user_id'] = user.id
+        
+        # Verificar se o usuário existe e se a senha está correta
+        if user and user.check_password(form.password_hash.data):
+            session['user_id'] = user.id  # Armazenar o ID do usuário na sessão
             flash('Login bem-sucedido!', 'success')
-            return redirect(url_for('home'))
+            return redirect(url_for('home'))  # Redirecionar para a página inicial
         else:
-            flash('Usuário ou senha inválidos.', 'danger')
-    return render_template('login.html', form=form)
+            flash('Usuário ou senha inválidos.', 'danger')  # Mensagem de erro
 
+    return render_template('login.html', form=form)  # Renderizar o template de login
+
+
+'''@app.route('/create_admin', methods=['GET'])
+def create_admin_view():
+    # Verifica se já existe um admin
+    existing_admin = User.query.filter_by(is_admin=True).first()
+    if existing_admin:
+        flash('Admin já existe!', 'warning')  # Mensagem se já existir um admin
+        return redirect(url_for('login'))  # Redireciona para a página de login
+
+    # Cria um novo admin
+    admin = User(username='admin')
+    admin.set_password('admin123')  # Define a senha
+    admin.role_id = 1  # Ou outro ID de papel que você tenha para admin
+    db.session.add(admin)
+    db.session.commit()
     
+    flash('Admin criado com sucesso!', 'success')  # Mensagem de sucesso
+    return redirect(url_for('login'))  # Redireciona para a página de login'''
+  
 
 '''@app.route('/home')
 def home():
@@ -104,7 +129,7 @@ def logout():
 # Rota de permissões
 @app.route('/employees', methods=['GET', 'POST'])
 def employees():
-    print("Sessão atual:", session)
+    # Verificar se o usuário está logado
     if 'user_id' not in session:
         flash('Por favor, faça login primeiro.', 'danger')
         return redirect(url_for('login'))
@@ -113,31 +138,40 @@ def employees():
     if not user:
         flash('Usuário não encontrado.', 'danger')
         return redirect(url_for('login'))
+
+    # Verificar se o usuário é administrador
     if not user.is_admin:
         flash('Acesso não autorizado. Você precisa ser administrador.', 'danger')
         return redirect(url_for('login'))
 
-    print("Usuário logado:", user.username)
-    
     form = EmployeeForm()
 
+    # Processar o formulário de cadastro de funcionário
     if form.validate_on_submit():
-            try:
-                employee = Employee(username=form.username.data)
-                employee.set_password(form.password.data)
-                employee.is_admin = form.is_admin.data
-                db.session.add(employee)
-                db.session.commit()
-                flash('Funcionário adicionado com sucesso!', 'success')
-            except Exception as e:
-                db.session.rollback()
-                print(f"Erro ao adicionar funcionário: {e}")
-                flash('Erro ao adicionar funcionário.', 'danger')
-    
-            return redirect(url_for('employees'))
+        try:
+            # Criar um novo funcionário com os dados do formulário
+            employee = Employee(
+                username=form.username.data,
+                is_admin=form.is_admin.data
+            )
+            employee.set_password(form.password_hash.data)  # Não se esqueça de hash a senha
 
+            db.session.add(employee)
+            db.session.commit()
+            flash('Funcionário adicionado com sucesso!', 'success')
+        except Exception as e:
+            db.session.rollback()
+            print(f"Erro ao adicionar funcionário: {e}")
+            flash('Erro ao adicionar funcionário.', 'danger')
+
+        return redirect(url_for('employees'))
+
+    # Buscar todos os funcionários cadastrados
     employees = Employee.query.all()
+    
+    # Renderizar o template de funcionários com o formulário e a lista de funcionários
     return render_template('employees.html', form=form, employees=employees)
+
 
 @app.route('/create_admin')
 def create_admin():
@@ -158,6 +192,7 @@ def appointments():
         # Pega os dados do formulário e salva o novo agendamento
         client_cpf = form.client_cpf.data
         date = form.date.data
+        time = form.time.data
         service = form.service.data
         
         # Verifica se o client é válido
@@ -167,7 +202,7 @@ def appointments():
             return redirect(url_for('appointments'))
 
         # Cria e adiciona o agendamento ao banco de dados
-        appointment = Appointment(client_id=client_cpf, date=date, service=service)
+        appointment = Appointment(client_id=client_cpf, date=date, service=service, time=time)
         db.session.add(appointment)
         db.session.commit()
 
@@ -201,19 +236,31 @@ def appointments_json():
         return jsonify({'error': 'Datas start e end são necessárias'}), 400
 
     try:
-        appointments = Appointment.query.filter(Appointment.date >= start, Appointment.date <= end).all()
+        # Converter strings para objetos datetime
+        start_date = datetime.fromisoformat(start).date()  # Apenas a data
+        end_date = datetime.fromisoformat(end).date()  # Apenas a data
+
+        # Filtrar os agendamentos no intervalo de datas
+        appointments = Appointment.query.filter(
+            Appointment.date >= start_date.strftime('%Y-%m-%d'),  # Converte para string no formato correto
+            Appointment.date <= end_date.strftime('%Y-%m-%d')  # Converte para string no formato correto
+        ).all()
+
         data = [
             {
                 'id': appointment.id,
                 'client': appointment.client.name,
-                'date': appointment.date,
-                'time': appointment.time,
+                'date': appointment.date,  # Como já está em string, pode usar diretamente
+                'time': appointment.time.strftime('%H:%M:%S'),  # Formata o campo time para string
                 'service': appointment.service
             }
             for appointment in appointments
         ]
         return jsonify(data)
+
     except Exception as e:
+        # Logando o erro para verificar detalhes
+        logging.error(f'Error occurred: {e}')
         return jsonify({'error': str(e)}), 500
 
 # Excluir agendamento
@@ -317,6 +364,10 @@ def get_events():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/tasks/<date>')
+def tasks(date):
+    appointments = Appointment.query.filter(Appointment.date == date).all()
+    return render_template('tasks.html', date=date, appointments=appointments)
 
 
 if __name__ == '__main__':

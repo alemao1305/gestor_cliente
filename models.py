@@ -38,6 +38,7 @@ class Appointment(db.Model):
     client_id = db.Column(db.Integer, db.ForeignKey('client.cpf'), nullable=False)
     employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
     date = db.Column(db.String(100), nullable=False)
+    time = db.Column(db.Time(100), nullable=False)
     service = db.Column(db.String(100), nullable=False)
     client = db.relationship('Client', backref=db.backref('appointments', lazy=True))
     employee = db.relationship('Employee', backref='appointments', lazy=True)
