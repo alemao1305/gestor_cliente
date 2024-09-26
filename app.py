@@ -5,6 +5,7 @@ from forms import ClientForm, AppointmentForm, LoginForm, EmployeeForm
 from datetime import datetime
 import os
 import logging
+import time
 '''from models import Client, Appointment'''
 
 app = Flask(__name__)
@@ -79,47 +80,24 @@ def home():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
-
-    # Verificar se o formulário foi enviado e é válido
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
-        
-        # Verificar se o usuário existe e se a senha está correta
         if user and user.check_password(form.password_hash.data):
-            session['user_id'] = user.id  # Armazenar o ID do usuário na sessão
-            flash('Login bem-sucedido!', 'success')
-            return redirect(url_for('home'))  # Redirecionar para a página inicial
+            session['user_id'] = user.id
+
+            if user.is_admin:
+                flash('Bem-vindo, administrador!', 'success')
+                return redirect(url_for('employees'))  # Administradores vão para a tela de funcionários
+            elif user.is_employee:
+                flash('Bem-vindo, funcionário!', 'success')
+                return redirect(url_for('dashboard'))  # Funcionários vão para o dashboard de funcionários
+            else:
+                flash('Bem-vindo ao sistema!', 'success')
+                return redirect(url_for('home'))  # Outros usuários
         else:
-            flash('Usuário ou senha inválidos.', 'danger')  # Mensagem de erro
+            flash('Usuário ou senha inválidos.', 'danger')
 
-    return render_template('login.html', form=form)  # Renderizar o template de login
-
-
-'''@app.route('/create_admin', methods=['GET'])
-def create_admin_view():
-    # Verifica se já existe um admin
-    existing_admin = User.query.filter_by(is_admin=True).first()
-    if existing_admin:
-        flash('Admin já existe!', 'warning')  # Mensagem se já existir um admin
-        return redirect(url_for('login'))  # Redireciona para a página de login
-
-    # Cria um novo admin
-    admin = User(username='admin')
-    admin.set_password('admin123')  # Define a senha
-    admin.role_id = 1  # Ou outro ID de papel que você tenha para admin
-    db.session.add(admin)
-    db.session.commit()
-    
-    flash('Admin criado com sucesso!', 'success')  # Mensagem de sucesso
-    return redirect(url_for('login'))  # Redireciona para a página de login'''
-  
-
-'''@app.route('/home')
-def home():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-    return render_template('home.html')'''
-
+    return render_template('login.html', form=form)
 @app.route('/logout')
 def logout():
     session.pop('user_id', None)
@@ -129,33 +107,22 @@ def logout():
 # Rota de permissões
 @app.route('/employees', methods=['GET', 'POST'])
 def employees():
-    # Verificar se o usuário está logado
     if 'user_id' not in session:
         flash('Por favor, faça login primeiro.', 'danger')
         return redirect(url_for('login'))
 
     user = User.query.get(session['user_id'])
-    if not user:
-        flash('Usuário não encontrado.', 'danger')
-        return redirect(url_for('login'))
-
-    # Verificar se o usuário é administrador
-    if not user.is_admin:
-        flash('Acesso não autorizado. Você precisa ser administrador.', 'danger')
+    if not user or not user.is_admin:
+        flash('Acesso negado.', 'danger')
         return redirect(url_for('login'))
 
     form = EmployeeForm()
 
-    # Processar o formulário de cadastro de funcionário
     if form.validate_on_submit():
         try:
-            # Criar um novo funcionário com os dados do formulário
-            employee = Employee(
-                username=form.username.data,
-                is_admin=form.is_admin.data
-            )
-            employee.set_password(form.password_hash.data)  # Não se esqueça de hash a senha
-
+            employee = User(username=form.username.data)
+            employee.set_password(form.password_hash.data)
+            employee.is_employee = True  # Define que esse usuário é funcionário
             db.session.add(employee)
             db.session.commit()
             flash('Funcionário adicionado com sucesso!', 'success')
@@ -166,11 +133,10 @@ def employees():
 
         return redirect(url_for('employees'))
 
-    # Buscar todos os funcionários cadastrados
-    employees = Employee.query.all()
-    
-    # Renderizar o template de funcionários com o formulário e a lista de funcionários
+    employees = User.query.filter_by(is_employee=True).all()
     return render_template('employees.html', form=form, employees=employees)
+
+
 
 
 @app.route('/create_admin')
@@ -307,18 +273,36 @@ def clients():
     clients = Client.query.all()  # Carrega todos os clientes
     return render_template('clients.html', form=form, clients=clients)
 
-@app.route('/delete_client/<int:client_id>', methods=['POST'])
-def delete_client(client_id):
-    client = Client.query.get_or_404(client_id)
-    try:
-        db.session.delete(client)  # Remove o cliente do banco
-        db.session.commit()  # Salva as alterações
-        flash('Cliente removido com sucesso!', 'success')
-    except Exception as e:
-        db.session.rollback()  # Faz rollback em caso de erro
-        flash(f'Erro ao remover cliente: {str(e)}', 'danger')
+@app.route('/client_list', methods=['GET', 'POST'])
+def client_list():
+    # Query para obter todos os clientes do banco de dados
+    clients = Client.query.all()
 
-    return redirect(url_for('clients'))  # Redireciona para a página de clientes
+    # Renderiza a página da lista de clientes com a lista de clientes
+    return render_template('client_list.html', clients=clients)
+
+@app.route('/delete_client/<client_id>', methods=['POST'])
+def delete_client(client_id):
+    try:
+        # Localiza o cliente pelo CPF (ou outro campo chave)
+        client = Client.query.filter_by(cpf=client_id).first()
+
+        # Verifica se o cliente existe
+        if client:
+            db.session.delete(client)
+            db.session.commit()
+            flash('Cliente excluído com sucesso!', 'success')
+        else:
+            flash('Cliente não encontrado.', 'danger')
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Erro ao excluir cliente: {e}")
+        flash('Erro ao excluir o cliente.', 'danger')
+
+    # Redireciona de volta para a lista de clientes após a exclusão
+    return redirect(url_for('client_list'))
+
 
 # Rota para exibir o calendário nativo
 @app.route('/calendar')
