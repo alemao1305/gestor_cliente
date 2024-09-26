@@ -5,6 +5,20 @@
     <div class="container mt-4">
         <h2>Cadastro de Funcionários</h2>
 
+        <!-- Exibir mensagens de sucesso ou erro -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div id="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
         <form method="POST" action="{{ url_for('employees') }}">
             {{ form.hidden_tag() }}
             <div class="form-group">
@@ -64,5 +78,22 @@
             {% endfor %}
         </ul>
     </div>
+
+    <!-- Inclua o JavaScript do Bootstrap -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    
+    <!-- Script para ocultar mensagens flash automaticamente após 5 segundos -->
+    <script>
+        // Espera 5 segundos e oculta as mensagens flash
+        setTimeout(function() {
+            let flashMessages = document.getElementById('flash-messages');
+            if (flashMessages) {
+                flashMessages.style.display = 'none';
+            }
+        }, 5000);  // 5000 milissegundos = 5 segundos
+    </script>
+
 </body>
 {% endblock %}
