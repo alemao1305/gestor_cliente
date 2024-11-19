@@ -15,7 +15,7 @@ class AppointmentForm(FlaskForm):
     client_cpf = StringField('CPF do Cliente', validators=[DataRequired()])
     date = DateField('Data', validators=[DataRequired()])
     time = TimeField('Horário', validators=[DataRequired()])
-    service = StringField('Serviço', validators=[DataRequired()])
+    service = SelectField('Serviço', validators=[DataRequired()])
     submit = SubmitField('Agendar')
 
 class LoginForm(FlaskForm):

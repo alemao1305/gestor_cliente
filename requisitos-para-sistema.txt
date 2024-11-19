@@ -1,0 +1,28 @@
+Cliente 
+
+1- cadastro client
+forms enviado por whats para cliente preencher os dados
+
+2- pesquisar clientes pelos problemas/ nomes/ palaveras
+
+3- fixa de evolução impedir de printar/ imprimir/ copiar 
+ só com permisão de adm
+
+4- fixa de controla de atendimento / assinatura da tela com caneta
+
+5- atenticão de assinatura.
+
+6- atestado para client/ relatório 
+
+7- recibo/ nota fiscal
+---------------------------------------------------------------------------------
+
+  Agendamento 
+
+1- agendar 10 agendamentos para o mesmo cliente no campo data e horario
+verificar conflitos de datas com ostros pacientes 
+
+2 localizar cliente por nome e id 
+
+---------------------------------------------------------------------------------
+
