@@ -1,0 +1,26 @@
+gestor_cliente/
+│
+├── app/
+│   ├── __init__.py
+│   ├── routes/
+│   │   ├── auth_routes.py
+│   │   ├── client_routes.py
+│   │   ├── appointment_routes.py
+│   │
+│   ├── models/
+│   │   ├── user.py
+│   │   ├── client.py
+│   │   ├── appointment.py
+│   │
+│   ├── services/
+│   │   ├── auth_service.py
+│   │   ├── client_service.py
+│   │   ├── appointment_service.py
+│   │
+│   ├── templates/
+│   ├── static/
+│
+├── config.py
+├── run.py
+├── requirements.txt
+└── README.md
