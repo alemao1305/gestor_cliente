@@ -6,8 +6,17 @@ gestor_cliente/
 │   │   ├── auth_routes.py
 │   │   ├── client_routes.py
 │   │   ├── appointment_routes.py
+|   |   ├── admin_routes.py 
+│   │
+│   ├── forms/
+|   |   ├── __init__.py 
+│   │   ├── auth_form.py
+│   │   ├── client_form.py
+│   │   ├── appointment_form.py
+│   │   ├── employee_form.py
 │   │
 │   ├── models/
+|   |   ├── __init__.py 
 │   │   ├── user.py
 │   │   ├── client.py
 │   │   ├── appointment.py
@@ -16,6 +25,7 @@ gestor_cliente/
 │   │   ├── auth_service.py
 │   │   ├── client_service.py
 │   │   ├── appointment_service.py
+|   |   ├── admin_routes.py
 │   │
 │   ├── templates/
 │   ├── static/
